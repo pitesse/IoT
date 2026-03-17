@@ -27,7 +27,7 @@ esp_now_peer_info_t ESP_sink; // peer data
 
 //  functions' prototypes  //
 void wifiInit();
-void onDataSent(const wifi_tx_info_t *tx_info, esp_now_send_status_t status);
+void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
 void sendMessage(String message);
 
 
@@ -84,7 +84,8 @@ void loop()
 void wifiInit()
 {
     WiFi.mode(WIFI_STA);
-    WiFi.setTxPower(WIFI_POWER_2dBm); // set wifi transmission power
+    // TODO look into this
+    WiFi.setTxPower(WIFI_POWER_19_5dBm); // set wifi transmission power to maximum from csv data
     esp_now_init();                   // init ESP-NOW communication protocol
 
     esp_now_register_send_cb(onDataSent); // set sending callback
@@ -98,9 +99,9 @@ void wifiInit()
 }
 
 // sending callback
-void onDataSent(const wifi_tx_info_t *tx_info, esp_now_send_status_t status)
+void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-    (void)tx_info;
+    (void)mac_addr;
     Serial.printf("Message status: ");
     Serial.printf(status == ESP_NOW_SEND_SUCCESS ? "SENT\r\n" : "ERROR\r\n");
 }
