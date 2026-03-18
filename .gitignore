@@ -1,3 +1,7 @@
 .vscode
 piggy/*
 challenge1/Wokwi
+.DS_Store
+*.ipynb_checkpoints
+*.pyc
+__pycache__/   
