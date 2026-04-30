@@ -1,13 +1,17 @@
 Challenge #3 - Form helper values
 
 Run seed: 20260430
-Run start timestamp: 1777554660
+Run start timestamp: 1777559569
 IDs processed: 200
 
 CSV sizes:
 - id_log.csv rows: 200
 - filtered_elems.csv rows: 26
 - outgoing_cost.csv rows: 70
+
+RMS chart sanity check:
+- RMS Current unique values: [0]
+- RMS Voltage unique values: [219, 220, 221, 222]
 
 Smallest source address in outgoing_cost.csv:
 - 0x0000
@@ -23,16 +27,16 @@ ThingSpeak ordered queue (Destination -> Cost):
 - 0xec7f -> 1 (field1=1, send at +140s)
 
 First 10 rows of filtered_elems.csv:
-1,1777554663,164,Active Power,Success,16-Bit Signed Integer,0
-2,1777554663,164,RMS Current,Success,16-Bit Unsigned Integer,0
-3,1777554663,164,RMS Voltage,Success,16-Bit Unsigned Integer,220
-4,1777554676,125,Active Power,Success,16-Bit Signed Integer,0
-5,1777554676,125,RMS Current,Success,16-Bit Unsigned Integer,0
-6,1777554676,125,RMS Voltage,Success,16-Bit Unsigned Integer,221
-7,1777554695,29,Active Power,Success,16-Bit Signed Integer,0
-8,1777554695,29,RMS Current,Success,16-Bit Unsigned Integer,0
-9,1777554695,29,RMS Voltage,Success,16-Bit Unsigned Integer,219
-10,1777554741,184,Active Power,Success,16-Bit Signed Integer,0
+1,1777559572,164,Active Power,Success,16-Bit Signed Integer,0
+2,1777559572,164,RMS Current,Success,16-Bit Unsigned Integer,0
+3,1777559572,164,RMS Voltage,Success,16-Bit Unsigned Integer,220
+4,1777559585,125,Active Power,Success,16-Bit Signed Integer,0
+5,1777559585,125,RMS Current,Success,16-Bit Unsigned Integer,0
+6,1777559585,125,RMS Voltage,Success,16-Bit Unsigned Integer,221
+7,1777559604,29,Active Power,Success,16-Bit Signed Integer,0
+8,1777559604,29,RMS Current,Success,16-Bit Unsigned Integer,0
+9,1777559604,29,RMS Voltage,Success,16-Bit Unsigned Integer,219
+10,1777559650,184,Active Power,Success,16-Bit Signed Integer,0
 
 First 10 rows of outgoing_cost.csv:
 1,0x0000,0x0112,7

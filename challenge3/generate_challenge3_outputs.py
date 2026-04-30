@@ -76,6 +76,11 @@ def clean_label(value):
 
 def parse_hex_int(value):
     text = str(value).strip().lower()
+    if re.fullmatch(r"[0-9a-f]+", text):
+        try:
+            return int(text, 16)
+        except ValueError:
+            return None
     if text.startswith("0x"):
         try:
             return int(text, 16)
@@ -224,7 +229,7 @@ def main():
         for row in reader:
             rows_by_packet[int(row["Packet Number"])] = row
 
-    max_packet = max(rows_by_packet.keys()) + 1
+    modulo = 5218
 
     rng = random.Random(args.seed)
 
@@ -240,7 +245,7 @@ def main():
         msg_no = msg_index + 1
         id_value = rng.randint(0, 30000)
         timestamp = args.start_ts + msg_index
-        packet_n = id_value % max_packet
+        packet_n = id_value % modulo
 
         id_log_rows.append({"No.": msg_no, "ID": id_value, "TIMESTAMP": timestamp})
 
@@ -319,7 +324,7 @@ def main():
         "seed": args.seed,
         "start_timestamp": args.start_ts,
         "messages_processed": args.messages,
-        "csv_packet_modulo": max_packet,
+        "csv_packet_modulo": modulo,
         "zcl_messages": zcl_publish_count,
         "link_status_messages": link_status_count,
         "ignored_messages": ignored_count,

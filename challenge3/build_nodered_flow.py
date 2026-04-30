@@ -60,7 +60,6 @@ nodes = [
             flow.set("filteredNo", 0);
             flow.set("outgoingCostMap", {});
             flow.set("csvIndex", {});
-            flow.set("csvModulo", 5218);
 
             return [
               { payload: Date.now() },
@@ -148,9 +147,6 @@ nodes = [
 
             const count = Object.keys(index).length;
             flow.set("csvIndex", index);
-            if (count > 0) {
-              flow.set("csvModulo", count);
-            }
 
             return { payload: `CSV index ready: ${count} rows` };
             """
@@ -265,6 +261,10 @@ nodes = [
             }
 
             let no = flow.get("idNo") || 0;
+            if (no >= 200) {
+              flow.set("done", true);
+              return [null, null];
+            }
             no += 1;
             flow.set("idNo", no);
 
@@ -384,7 +384,6 @@ nodes = [
               flow.set("done", true);
             }
 
-            const modulo = Number(flow.get("csvModulo") || 5218);
             const idInt = Math.trunc(id);
 
             msg.sub_id = idInt;
@@ -392,7 +391,7 @@ nodes = [
               ? Math.trunc(Number(data.timestamp))
               : Math.floor(Date.now() / 1000);
             msg.sub_count = count;
-            msg.n = ((idInt % modulo) + modulo) % modulo;
+            msg.n = ((idInt % 5218) + 5218) % 5218;
 
             return msg;
             """
@@ -437,9 +436,16 @@ nodes = [
             }
 
             function toHex(addr) {
-              const text = String(addr || "").trim().toLowerCase();
+              let text = String(addr || "").trim().toLowerCase();
+              if (!text) {
+                return "";
+              }
               if (!text.startsWith("0x")) {
-                return text;
+                if (/^[0-9a-f]+$/.test(text)) {
+                  text = `0x${text}`;
+                } else {
+                  return text;
+                }
               }
               const n = parseInt(text, 16);
               if (Number.isNaN(n)) {

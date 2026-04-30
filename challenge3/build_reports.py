@@ -123,10 +123,38 @@ def draw_rms_charts(filtered_rows, current_img: Path, voltage_img: Path):
 
     def plot_series(points, title, ylabel, out_path, color):
         fig, ax = plt.subplots(figsize=(10, 4.2))
+        stats = {
+            'count': 0,
+            'min': None,
+            'max': None,
+            'unique_count': 0,
+            'unique_values': [],
+            'is_flat': False,
+        }
         if points:
             xs = [p[0] for p in points]
             ys = [p[1] for p in points]
             ax.plot(xs, ys, marker='o', linewidth=1.8, color=color)
+            uniq = sorted(set(ys))
+            stats.update(
+                {
+                    'count': len(ys),
+                    'min': min(ys),
+                    'max': max(ys),
+                    'unique_count': len(uniq),
+                    'unique_values': uniq,
+                    'is_flat': len(uniq) == 1,
+                }
+            )
+            if len(uniq) == 1:
+                ax.text(
+                    0.02,
+                    0.92,
+                    f'All observed values are {uniq[0]}',
+                    transform=ax.transAxes,
+                    fontsize=10,
+                    bbox={'facecolor': 'white', 'alpha': 0.75, 'edgecolor': '#999999'},
+                )
         ax.set_title(title)
         ax.set_xlabel('Time')
         ax.set_ylabel(ylabel)
@@ -135,9 +163,11 @@ def draw_rms_charts(filtered_rows, current_img: Path, voltage_img: Path):
         plt.tight_layout()
         fig.savefig(out_path, dpi=180)
         plt.close(fig)
+        return stats
 
-    plot_series(current_points, 'RMS Current Values', 'Current', current_img, '#1f77b4')
-    plot_series(voltage_points, 'RMS Voltage Values', 'Voltage', voltage_img, '#d62728')
+    current_stats = plot_series(current_points, 'RMS Current Values', 'Current', current_img, '#1f77b4')
+    voltage_stats = plot_series(voltage_points, 'RMS Voltage Values', 'Voltage', voltage_img, '#d62728')
+    return {'current': current_stats, 'voltage': voltage_stats}
 
 
 def first_rows_table(rows, wanted_columns, n=8):
@@ -148,7 +178,7 @@ def first_rows_table(rows, wanted_columns, n=8):
     return data
 
 
-def build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows):
+def build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows, chart_stats):
     styles = getSampleStyleSheet()
     story = []
 
@@ -237,7 +267,6 @@ def build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows):
     story.append(tbl_filtered)
     story.append(Spacer(1, 0.2 * cm))
 
-    story.append(Paragraph('outgoing_cost.csv (first rows)', styles['Heading3']))
     tbl_outgoing = Table(first_rows_table(outgoing_rows, ['No.', 'Source', 'Destination', 'Cost'], n=8), colWidths=[1.5 * cm, 3 * cm, 3 * cm, 2 * cm])
     tbl_outgoing.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.4, colors.grey), ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey)]))
     story.append(tbl_outgoing)
@@ -245,6 +274,18 @@ def build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows):
     story.append(PageBreak())
 
     story.append(Paragraph('6) RMS chart outputs', styles['Heading2']))
+    story.append(
+        Paragraph(
+            (
+                f"RMS Current samples: {chart_stats['current']['count']}, "
+                f"unique values: {chart_stats['current']['unique_values']}. "
+                f"RMS Voltage samples: {chart_stats['voltage']['count']}, "
+                f"unique values: {chart_stats['voltage']['unique_values']}."
+            ),
+            styles['BodyText'],
+        )
+    )
+    story.append(Spacer(1, 0.15 * cm))
     story.append(Paragraph('RMS Current chart', styles['Heading3']))
     story.append(Image(str(RMS_CURR_IMG), width=17.5 * cm, height=7 * cm))
     story.append(Spacer(1, 0.2 * cm))
@@ -350,7 +391,7 @@ def build_exercise_pdf():
     doc.build(story)
 
 
-def build_form_values(summary, filtered_rows, outgoing_rows, thingspeak_rows):
+def build_form_values(summary, filtered_rows, outgoing_rows, thingspeak_rows, chart_stats):
     lines = []
     lines.append('Challenge #3 - Form helper values')
     lines.append('')
@@ -362,6 +403,10 @@ def build_form_values(summary, filtered_rows, outgoing_rows, thingspeak_rows):
     lines.append(f"- id_log.csv rows: {len(read_csv(ID_LOG_PATH))}")
     lines.append(f"- filtered_elems.csv rows: {len(filtered_rows)}")
     lines.append(f"- outgoing_cost.csv rows: {len(outgoing_rows)}")
+    lines.append('')
+    lines.append('RMS chart sanity check:')
+    lines.append(f"- RMS Current unique values: {chart_stats['current']['unique_values']}")
+    lines.append(f"- RMS Voltage unique values: {chart_stats['voltage']['unique_values']}")
     lines.append('')
     lines.append('Smallest source address in outgoing_cost.csv:')
     lines.append(f"- {summary.get('smallest_source_for_thingspeak')}")
@@ -404,10 +449,10 @@ def main():
     thingspeak_rows = read_csv(THINGSPEAK_QUEUE_PATH)
 
     draw_flow_diagram(FLOW_IMG)
-    draw_rms_charts(filtered_rows, RMS_CURR_IMG, RMS_VOLT_IMG)
-    build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows)
+    chart_stats = draw_rms_charts(filtered_rows, RMS_CURR_IMG, RMS_VOLT_IMG)
+    build_challenge_pdf(summary, filtered_rows, outgoing_rows, id_rows, chart_stats)
     build_exercise_pdf()
-    build_form_values(summary, filtered_rows, outgoing_rows, thingspeak_rows)
+    build_form_values(summary, filtered_rows, outgoing_rows, thingspeak_rows, chart_stats)
 
     print('Generated:')
     print('-', FLOW_IMG)
